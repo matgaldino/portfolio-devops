@@ -46,3 +46,35 @@ jobs:
                 ignore-unfixed: true
                 vuln-type: 'os,library'
                 severity: 'HIGH,CRITICAL'
+    
+    publish:
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        needs: validate
+        runs-on: ubuntu-24.04
+
+        permissions:
+            contents: read
+            id-token: write
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v7
+
+            - name: Login to Azure with OIDC
+              uses: azure/login@v3
+              with:
+                client-id: ${{ vars.AZURE_CLIENT_ID }}
+                tenant-id: ${{ vars.AZURE_TENANT_ID }}
+                subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+            - name: Login to Azure Container Registry
+              run: az acr login --name ${{ vars.ACR_NAME }}
+
+            - name: Build and push Docker image
+              env:
+                REGISTRY: ${{ vars.ACR_NAME }}.azurecr.io
+                IMAGE_NAME: portfolio-devops
+                IMAGE_TAG: ${{ github.sha }}
+              run: |
+                docker build -t "$REGISTRY/$IMAGE_NAME:$IMAGE_TAG" .
+                docker push "$REGISTRY/$IMAGE_NAME:$IMAGE_TAG"
