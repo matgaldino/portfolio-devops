@@ -33,3 +33,16 @@ jobs:
 
             - name: Build application
               run: npm run build
+
+            - name: Build Docker image
+              run: docker build -t portfolio-devops:${{ github.sha }} .
+
+            - name: Scan Docker image
+              uses: aquasecurity/trivy-action@v0.36.0
+              with:
+                image-ref: 'portfolio-devops:${{ github.sha }}'
+                format: table
+                exit-code: '1'
+                ignore-unfixed: true
+                vuln-type: 'os,library'
+                severity: 'HIGH,CRITICAL'
