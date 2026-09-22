@@ -78,3 +78,31 @@ jobs:
               run: |
                 docker build -t "$REGISTRY/$IMAGE_NAME:$IMAGE_TAG" .
                 docker push "$REGISTRY/$IMAGE_NAME:$IMAGE_TAG"
+
+    deploy:
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      needs: publish
+      runs-on: ubuntu-24.04
+
+      permissions:
+        contents: read
+        id-token: write
+
+      steps:
+        - name: Login to Azure with OIDC
+          uses: azure/login@v3
+          with:
+            client-id: ${{ vars.AZURE_CLIENT_ID }}
+            tenant-id: ${{ vars.AZURE_TENANT_ID }}
+            subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+        - name: Install Container Apps CLI extension
+          run: az extension add --name containerapp --upgrade --allow-preview true
+
+        - name: Deploy to Azure Container Apps
+          env:
+            REGISTRY: ${{ vars.ACR_NAME }}.azurecr.io
+            IMAGE_NAME: portfolio-devops
+            IMAGE_TAG: ${{ github.sha }}
+          run: |
+            az containerapp update --name portfolio-devops --resource-group rg-portfolio-devops --image "$REGISTRY/$IMAGE_NAME:$IMAGE_TAG"
