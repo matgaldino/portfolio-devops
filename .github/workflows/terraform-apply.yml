@@ -1,0 +1,144 @@
+name: Terraform Apply
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "terraform/**"
+      - "!terraform/bootstrap/**"
+
+  workflow_dispatch:
+
+concurrency:
+  group: terraform-apply
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+
+    permissions:
+      contents: read
+      id-token: write
+
+    outputs:
+      has_changes: ${{ steps.plan.outputs.has_changes }}
+
+    defaults:
+      run:
+        working-directory: terraform
+
+    env:
+      TFPLAN_BLOB: portfolio-${{ github.sha }}.tfplan
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: 1.16.3
+
+      - name: Login to Azure with plan identity
+        uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_TF_PLAN_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Initialize Terraform
+        run: terraform init -input=false
+
+      - name: Create Terraform plan
+        id: plan
+        shell: bash
+        run: |
+          set +e
+          terraform plan \
+            -input=false \
+            -no-color \
+            -detailed-exitcode \
+            -out=tfplan
+
+          exit_code=$?
+          set -e
+
+          if [ "$exit_code" -eq 1 ]; then
+            exit 1
+          elif [ "$exit_code" -eq 2 ]; then
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upload Terraform plan
+        if: steps.plan.outputs.has_changes == 'true'
+        run: |
+          az storage blob upload \
+            --account-name "${{ vars.TFSTATE_STORAGE_ACCOUNT }}" \
+            --container-name tfplans \
+            --name "$TFPLAN_BLOB" \
+            --file tfplan \
+            --auth-mode login \
+            --overwrite false
+
+  apply:
+    needs: plan
+    if: needs.plan.outputs.has_changes == 'true'
+
+    runs-on: ubuntu-24.04
+    environment: production
+
+    permissions:
+      contents: read
+      id-token: write
+
+    defaults:
+      run:
+        working-directory: terraform
+
+    env:
+      TFPLAN_BLOB: portfolio-${{ github.sha }}.tfplan
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: 1.16.3
+
+      - name: Login to Azure with apply identity
+        uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_TF_APPLY_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Initialize Terraform
+        run: terraform init -input=false
+
+      - name: Download approved Terraform plan
+        run: |
+          az storage blob download \
+            --account-name "${{ vars.TFSTATE_STORAGE_ACCOUNT }}" \
+            --container-name tfplans \
+            --name "$TFPLAN_BLOB" \
+            --file tfplan \
+            --auth-mode login
+
+      - name: Apply Terraform plan
+        run: terraform apply -input=false tfplan
+
+      - name: Delete Terraform plan
+        if: always()
+        run: |
+          az storage blob delete \
+            --account-name "${{ vars.TFSTATE_STORAGE_ACCOUNT }}" \
+            --container-name tfplans \
+            --name "$TFPLAN_BLOB" \
+            --auth-mode login
