@@ -110,9 +110,15 @@ jobs:
     terraform:
       runs-on: ubuntu-24.04
 
+      strategy:
+        matrix:
+          directory:
+            - terraform
+            - terraform/bootstrap
+
       defaults:
         run:
-          working-directory: terraform
+          working-directory: ${{ matrix.directory }}
 
       steps:
         - name: Checkout repository

@@ -24,9 +24,9 @@ dist-ssr
 *.sw?
 
 # Terraform
-terraform/.terraform/
-terraform/*.tfstate
-terraform/*.tfstate.*
-terraform/*.tfvars
-terraform/*.tfvars.json
-terraform/.terraform.tfstate.lock.info
+**/.terraform/
+**/*.tfstate
+**/*.tfstate.*
+**/*.tfvars
+**/*.tfvars.json
+**/.terraform.tfstate.lock.info
