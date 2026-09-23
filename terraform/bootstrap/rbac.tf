@@ -26,15 +26,6 @@ resource "azurerm_role_assignment" "terraform_plan_reader" {
   principal_id         = azuread_service_principal.terraform_plan.object_id
 }
 
-data "azurerm_storage_account" "tfstate" {
-  name                = "sttfportfoliomg26"
-  resource_group_name = "rg-portfolio-tfstate"
-}
-
-locals {
-  tfstate_container_scope = "${data.azurerm_storage_account.tfstate.id}/blobServices/default/containers/tfstate"
-}
-
 resource "azurerm_role_assignment" "terraform_plan_tfstate" {
   scope                = local.tfstate_container_scope
   role_definition_name = "Storage Blob Data Contributor"
@@ -95,5 +86,17 @@ resource "azurerm_role_assignment" "terraform_apply_tfstate" {
 resource "azurerm_role_assignment" "terraform_apply_acr_rbac" {
   scope                = data.azurerm_container_registry.portfolio.id
   role_definition_name = "Role Based Access Control Administrator"
+  principal_id         = azuread_service_principal.terraform_apply.object_id
+}
+
+resource "azurerm_role_assignment" "terraform_plan_tfplans" {
+  scope                = azurerm_storage_container.tfplans.id
+  role_definition_name = "Storage Blob Data Contributor"
+  principal_id         = azuread_service_principal.terraform_plan.object_id
+}
+
+resource "azurerm_role_assignment" "terraform_apply_tfplans" {
+  scope                = azurerm_storage_container.tfplans.id
+  role_definition_name = "Storage Blob Data Contributor"
   principal_id         = azuread_service_principal.terraform_apply.object_id
 }

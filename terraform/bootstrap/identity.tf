@@ -48,3 +48,11 @@ resource "azuread_application_federated_identity_credential" "terraform_apply_pr
   issuer         = "https://token.actions.githubusercontent.com"
   subject        = "repo:matgaldino@95775755/portfolio-devops@1379996565:environment:production"
 }
+
+resource "azuread_application_federated_identity_credential" "terraform_plan_main" {
+  application_id = azuread_application_registration.terraform_plan.id
+  display_name   = "github-main"
+  audiences      = ["api://AzureADTokenExchange"]
+  issuer         = "https://token.actions.githubusercontent.com"
+  subject        = "repo:matgaldino@95775755/portfolio-devops@1379996565:ref:refs/heads/main"
+}
