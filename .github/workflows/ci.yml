@@ -107,7 +107,7 @@ jobs:
           run: |
             az containerapp update --name portfolio-devops --resource-group rg-portfolio-devops --image "$REGISTRY/$IMAGE_NAME:$IMAGE_TAG"
 
-    terraform:
+    terraform-validation:
       runs-on: ubuntu-24.04
 
       strategy:
@@ -137,3 +137,19 @@ jobs:
 
         - name: Validate Terraform
           run: terraform validate
+
+    terraform:
+      name: terraform
+      needs: terraform-validation
+      if: always()
+      runs-on: ubuntu-24.04
+
+      steps:
+        - name: Check Terraform validation result
+          run: |
+            if [ "${{ needs.terraform-validation.result }}" != "success" ]; then
+              echo "Terraform validation failed."
+              exit 1
+            fi
+
+            echo "All Terraform validation jobs passed."
