@@ -24,17 +24,12 @@ resource "azurerm_role_assignment" "containerapp_acr_pull" {
 }
 
 resource "azurerm_log_analytics_workspace" "portfolio" {
-  name                = "workspace-rgportfoliodevopsRigD"
-  resource_group_name = azurerm_resource_group.portfolio.name
-  location            = azurerm_resource_group.portfolio.location
-  sku                 = "PerGB2018"
-  retention_in_days   = 30
-
-  lifecycle {
-    ignore_changes = [
-      local_authentication_enabled
-    ]
-  }
+  name                         = "workspace-rgportfoliodevopsRigD"
+  resource_group_name          = azurerm_resource_group.portfolio.name
+  location                     = azurerm_resource_group.portfolio.location
+  sku                          = "PerGB2018"
+  retention_in_days            = 30
+  local_authentication_enabled = true
 }
 
 resource "azurerm_container_app_environment" "portfolio" {
