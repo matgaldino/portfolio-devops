@@ -116,3 +116,14 @@ resource "azurerm_container_app" "portfolio" {
     ]
   }
 }
+
+resource "azapi_update_resource" "container_app_environment_mode" {
+  type        = "Microsoft.App/managedEnvironments@2026-01-01"
+  resource_id = azurerm_container_app_environment.portfolio.id
+
+  body = {
+    properties = {
+      environmentMode = "WorkloadProfiles"
+    }
+  }
+}
