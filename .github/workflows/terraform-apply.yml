@@ -7,6 +7,7 @@ on:
     paths:
       - "terraform/**"
       - "!terraform/bootstrap/**"
+      - ".github/workflows/terraform-apply.yml"
 
   workflow_dispatch:
 
