@@ -1,6 +1,12 @@
 resource "azurerm_resource_group" "portfolio" {
   name     = "rg-portfolio-devops"
   location = "France Central"
+
+  tags = {
+    project     = "portfolio-devops"
+    environment = "production"
+    managed_by  = "terraform"
+  }
 }
 
 resource "azurerm_container_registry" "portfolio" {
