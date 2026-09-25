@@ -117,9 +117,10 @@ resource "azurerm_container_app" "portfolio" {
   }
 }
 
-resource "azapi_update_resource" "container_app_environment_mode" {
-  type        = "Microsoft.App/managedEnvironments@2026-01-01"
+resource "azapi_resource_action" "container_app_environment_mode" {
+  type        = "Microsoft.App/managedEnvironments@2025-10-02-preview"
   resource_id = azurerm_container_app_environment.portfolio.id
+  method      = "PATCH"
 
   body = {
     properties = {
