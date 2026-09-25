@@ -41,6 +41,7 @@ jobs:
         uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: 1.16.3
+          terraform_wrapper: false
 
       - name: Login to Azure with plan identity
         uses: azure/login@v3
@@ -111,6 +112,7 @@ jobs:
         uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: 1.16.3
+          terraform_wrapper: false
 
       - name: Login to Azure with apply identity
         uses: azure/login@v3
