@@ -35,9 +35,11 @@ jobs:
               run: npm run build
 
             - name: Build Docker image
+              if: github.event_name == 'pull_request'
               run: docker build -t portfolio-devops:${{ github.sha }} .
 
             - name: Scan Docker image
+              if: github.event_name == 'pull_request'
               uses: aquasecurity/trivy-action@v0.36.0
               with:
                 image-ref: 'portfolio-devops:${{ github.sha }}'
@@ -51,6 +53,8 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         needs: validate
         runs-on: ubuntu-24.04
+        outputs:
+          image_ref: ${{ steps.image.outputs.image_ref }}
 
         permissions:
             contents: read
@@ -59,6 +63,19 @@ jobs:
         steps:
             - name: Checkout repository
               uses: actions/checkout@v7
+
+            - name: Build Docker image
+              run: docker build -t portfolio-devops:${{ github.sha }} .
+
+            - name: Scan Docker image
+              uses: aquasecurity/trivy-action@v0.36.0
+              with:
+                image-ref: 'portfolio-devops:${{ github.sha }}'
+                format: table
+                exit-code: '1'
+                ignore-unfixed: true
+                vuln-type: 'os,library'
+                severity: 'HIGH,CRITICAL'
 
             - name: Login to Azure with OIDC
               uses: azure/login@v3
@@ -70,14 +87,24 @@ jobs:
             - name: Login to Azure Container Registry
               run: az acr login --name ${{ vars.ACR_NAME }}
 
-            - name: Build and push Docker image
+            - name: Push Docker image
               env:
                 REGISTRY: ${{ vars.ACR_NAME }}.azurecr.io
                 IMAGE_NAME: portfolio-devops
                 IMAGE_TAG: ${{ github.sha }}
               run: |
-                docker build -t "$REGISTRY/$IMAGE_NAME:$IMAGE_TAG" .
+                docker tag "portfolio-devops:$IMAGE_TAG" "$REGISTRY/$IMAGE_NAME:$IMAGE_TAG"
                 docker push "$REGISTRY/$IMAGE_NAME:$IMAGE_TAG"
+
+            - name: Resolve image digest
+              id: image
+              env:
+                REGISTRY: ${{ vars.ACR_NAME }}.azurecr.io
+                IMAGE_NAME: portfolio-devops
+                IMAGE_TAG: ${{ github.sha }}
+              run: |
+                DIGEST=$(az acr repository show --name "${{ vars.ACR_NAME }}" --image "$IMAGE_NAME:$IMAGE_TAG" --query digest --output tsv)
+                echo "image_ref=$REGISTRY/$IMAGE_NAME@$DIGEST" >> "$GITHUB_OUTPUT"
 
     deploy:
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -101,11 +128,9 @@ jobs:
 
         - name: Deploy to Azure Container Apps
           env:
-            REGISTRY: ${{ vars.ACR_NAME }}.azurecr.io
-            IMAGE_NAME: portfolio-devops
-            IMAGE_TAG: ${{ github.sha }}
+            IMAGE_REF: ${{ needs.publish.outputs.image_ref }}
           run: |
-            az containerapp update --name portfolio-devops --resource-group rg-portfolio-devops --image "$REGISTRY/$IMAGE_NAME:$IMAGE_TAG"
+            az containerapp update --name portfolio-devops --resource-group rg-portfolio-devops --image "$IMAGE_REF"
 
     terraform-validation:
       runs-on: ubuntu-24.04
