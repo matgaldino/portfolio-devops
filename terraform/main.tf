@@ -39,7 +39,7 @@ resource "azurerm_log_analytics_workspace" "portfolio" {
 }
 
 resource "azurerm_container_app_environment" "portfolio" {
-  name                       = "cae-portfolio-devops"
+  name                       = "cae-portfolio-devops-standard"
   location                   = azurerm_resource_group.portfolio.location
   resource_group_name        = azurerm_resource_group.portfolio.name
   logs_destination           = "log-analytics"
@@ -101,7 +101,7 @@ resource "azurerm_container_app" "portfolio" {
 
     container {
       name   = "portfolio-devops"
-      image  = "acrportfolio2026mg.azurecr.io/portfolio-devops:cbe2076501156af7d2d697a482d89f44a3485553"
+      image  = "acrportfolio2026mg.azurecr.io/portfolio-devops@sha256:35c3ca84cfd6b1a8846eb6727e7a9b38360a9f150e3e5bc29ad7cc1eafed3f6f"
       cpu    = 0.5
       memory = "1.0Gi"
     }

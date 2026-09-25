@@ -39,12 +39,7 @@ data "azurerm_container_app" "portfolio" {
 }
 
 resource "azurerm_role_assignment" "terraform_plan_containerapp" {
-  scope = replace(
-    data.azurerm_container_app.portfolio.id,
-    "containerApps",
-    "containerapps"
-  )
-
+  scope              = data.azurerm_resource_group.portfolio.id
   role_definition_id = azurerm_role_definition.terraform_plan_containerapp.role_definition_resource_id
   principal_id       = azuread_service_principal.terraform_plan.object_id
 }
@@ -61,12 +56,7 @@ resource "azurerm_role_assignment" "deploy_acr_push" {
 }
 
 resource "azurerm_role_assignment" "deploy_containerapp_contributor" {
-  scope = replace(
-    data.azurerm_container_app.portfolio.id,
-    "containerApps",
-    "containerapps"
-  )
-
+  scope                = data.azurerm_resource_group.portfolio.id
   role_definition_name = "Container Apps Contributor"
   principal_id         = azuread_service_principal.deploy.object_id
 }
