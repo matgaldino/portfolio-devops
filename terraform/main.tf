@@ -173,3 +173,25 @@ resource "azurerm_monitor_action_group" "portfolio_alerts" {
     use_common_alert_schema = true
   }
 }
+
+resource "uptimerobot_monitor" "portfolio" {
+  name     = "matgaldino.com.br"
+  type     = "HTTP"
+  url      = "https://matgaldino.com.br"
+  interval = 300
+
+  auth_type           = "NONE"
+  follow_redirections = true
+
+  region_data = {
+    auto_select = true
+  }
+
+  assigned_alert_contacts = [
+    {
+      alert_contact_id = "8898124"
+      threshold        = 0
+      recurrence       = 0
+    }
+  ]
+}

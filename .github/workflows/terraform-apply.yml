@@ -33,6 +33,7 @@ jobs:
 
     env:
       TFPLAN_BLOB: portfolio-${{ github.sha }}.tfplan
+      UPTIMEROBOT_API_KEY: ${{ secrets.UPTIMEROBOT_API_KEY }}
 
     steps:
       - name: Checkout repository
@@ -104,6 +105,7 @@ jobs:
 
     env:
       TFPLAN_BLOB: portfolio-${{ github.sha }}.tfplan
+      UPTIMEROBOT_API_KEY: ${{ secrets.UPTIMEROBOT_API_KEY }}
 
     steps:
       - name: Checkout repository

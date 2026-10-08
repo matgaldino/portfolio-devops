@@ -10,6 +10,11 @@ terraform {
       source  = "Azure/azapi"
       version = "~> 2.12"
     }
+
+    uptimerobot = {
+      source  = "uptimerobot/uptimerobot"
+      version = "~> 1.11"
+    }
   }
 
   backend "azurerm" {

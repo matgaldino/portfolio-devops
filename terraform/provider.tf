@@ -5,3 +5,5 @@ provider "azurerm" {
 }
 
 provider "azapi" {}
+
+provider "uptimerobot" {}
