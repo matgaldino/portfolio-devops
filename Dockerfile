@@ -12,7 +12,7 @@ RUN npm run build
 
 FROM nginx:alpine
 
-RUN apk upgrade --no-cache libexpat pcre2
+RUN apk upgrade --no-cache
 
 COPY --from=build /app/dist /usr/share/nginx/html
 
