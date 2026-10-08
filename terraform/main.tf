@@ -103,7 +103,7 @@ resource "azurerm_container_app" "portfolio" {
       name   = "portfolio-devops"
       image  = "acrportfolio2026mg.azurecr.io/portfolio-devops@sha256:35c3ca84cfd6b1a8846eb6727e7a9b38360a9f150e3e5bc29ad7cc1eafed3f6f"
       cpu    = 0.5
-      memory = "1.0Gi"
+      memory = "1Gi"
     }
   }
 
