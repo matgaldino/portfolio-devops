@@ -137,3 +137,39 @@ resource "azapi_resource_action" "container_app_environment_mode" {
     }
   }
 }
+
+resource "azurerm_monitor_metric_alert" "container_restart" {
+  name                = "portfolio-container-restarts"
+  resource_group_name = azurerm_resource_group.portfolio.name
+  scopes              = [azurerm_container_app.portfolio.id]
+
+  description = "Alert when the portfolio Container App restarts."
+  severity    = 2
+
+  frequency   = "PT1M"
+  window_size = "PT5M"
+
+  criteria {
+    metric_namespace = "Microsoft.App/containerApps"
+    metric_name      = "RestartCount"
+    aggregation      = "Maximum"
+    operator         = "GreaterThan"
+    threshold        = 0
+  }
+
+  action {
+    action_group_id = azurerm_monitor_action_group.portfolio_alerts.id
+  }
+}
+
+resource "azurerm_monitor_action_group" "portfolio_alerts" {
+  name                = "portfolio-alerts"
+  resource_group_name = azurerm_resource_group.portfolio.name
+  short_name          = "portfolio"
+
+  email_receiver {
+    name                    = "owner"
+    email_address           = "matheusgaldino2011@gmail.com"
+    use_common_alert_schema = true
+  }
+}
