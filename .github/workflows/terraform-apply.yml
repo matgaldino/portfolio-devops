@@ -12,8 +12,9 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: terraform-apply
+  group: production-container-app
   cancel-in-progress: false
+  queue: max
 
 jobs:
   plan:
